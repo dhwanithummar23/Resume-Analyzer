@@ -1,0 +1,261 @@
+import streamlit as st
+from google import genai
+import os
+from PyPDF2 import PdfReader
+from dotenv import load_dotenv
+import re
+import pandas as pd
+import json
+
+# -----------------------------------
+# Load Environment Variables
+# -----------------------------------
+load_dotenv()
+
+# -----------------------------------
+# Configure Gemini Client
+# -----------------------------------
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
+# -----------------------------------
+# Page Configuration
+# -----------------------------------
+st.set_page_config(
+    page_title="AI Resume Analyzer",
+    page_icon="📄",
+    layout="wide"
+)
+
+# -----------------------------------
+# Load External CSS
+# -----------------------------------
+def load_css(file_name):
+    with open(file_name, encoding="utf-8") as f:
+        st.markdown(
+            f"<style>{f.read()}</style>",
+            unsafe_allow_html=True
+        )
+
+load_css("styles/style.css")
+
+# -----------------------------------
+# Header
+# -----------------------------------
+st.markdown(
+    """
+    <div class="hero">
+        <h1>📄 AI Resume Analyzer</h1>
+        <p>
+            Upload your resume and receive an AI-powered analysis,
+            key skills extraction, resume score, and improvement suggestions.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# -----------------------------------
+# Upload Resume
+# -----------------------------------
+uploaded_file = st.file_uploader(
+    "Upload Resume (PDF)",
+    type=["pdf"]
+)
+
+# -----------------------------------
+# Process Uploaded Resume
+# -----------------------------------
+if uploaded_file:
+
+    pdf = PdfReader(uploaded_file)
+
+    text = ""
+
+    for page in pdf.pages:
+
+        page_text = page.extract_text()
+
+        if page_text:
+
+            text += page_text + "\n"
+
+    # Clean extracted text
+    text_clean = re.sub(
+        r"(?<!\n)\n(?!\n)",
+        " ",
+        text
+    )
+
+    # Two-column layout
+    col1, col2 = st.columns(2)
+
+    # -----------------------------------
+    # Resume Preview
+    # -----------------------------------
+    with col1:
+
+        st.markdown(
+            "<div class='card-title'>📄 Resume Preview</div>",
+            unsafe_allow_html=True
+        )
+
+        st.text_area(
+            "",
+            value=text_clean,
+            height=500
+        )
+
+    # -----------------------------------
+    # AI Analysis
+    # -----------------------------------
+    with col2:
+
+        st.markdown(
+            "<div class='card-title'>🤖 AI Analysis</div>",
+            unsafe_allow_html=True
+        )
+
+        analyze = st.button(
+            "🚀 Analyze Resume",
+            use_container_width=True
+        )
+
+        if analyze:
+
+            with st.spinner("Analyzing Resume..."):
+                                # -----------------------------------
+                # AI Prompt
+                # -----------------------------------
+                prompt = f"""
+You are an expert ATS Resume Analyzer.
+
+Analyze the following resume professionally and provide:
+
+1. Professional Summary
+
+2. Key Skills (Bullet Points)
+
+3. Strengths
+
+4. Areas of Improvement
+
+5. Suggestions to Improve ATS Score
+
+6. Score out of 100 using:
+
+- Skills Match (30)
+- Experience & Achievements (30)
+- Clarity & Formatting (20)
+- Overall Impression (20)
+
+At the end write exactly:
+
+Score JSON:
+{{
+    "Skills Match": 0,
+    "Experience & Achievements": 0,
+    "Clarity & Formatting": 0,
+    "Overall Impression": 0
+}}
+
+Resume:
+
+{text_clean}
+"""
+
+                try:
+
+                    response = client.models.generate_content(
+                        model="gemini-3.5-flash",
+                        contents=prompt
+                    )
+
+                    result = response.text.strip()
+
+                    parts = result.split("Score JSON:")
+
+                    analysis_text = parts[0]
+
+                    st.markdown("### 📋 AI Analysis")
+                    st.markdown(analysis_text)
+
+                    score_data = None
+
+                    if len(parts) > 1:
+
+                        try:
+
+                            score_data = json.loads(
+                                parts[1].strip()
+                            )
+
+                        except Exception:
+
+                            st.warning(
+                                "Could not parse score JSON."
+                            )
+
+                                        # -----------------------------------
+                    # Display Score Breakdown
+                    # -----------------------------------
+                    if score_data:
+
+                        st.markdown("### 📊 Score Breakdown")
+
+                        df = pd.DataFrame(
+                            {
+                                "Category": list(score_data.keys()),
+                                "Score": list(score_data.values())
+                            }
+                        )
+
+                        st.bar_chart(
+                            df.set_index("Category")
+                        )
+
+                        total_score = sum(
+                            score_data.values()
+                        )
+
+                        st.markdown("### 🎯 Overall Score")
+
+                        st.progress(
+                            total_score / 100
+                        )
+
+                        st.metric(
+                            label="Resume Score",
+                            value=f"{total_score}/100"
+                        )
+
+                        if total_score >= 85:
+
+                            st.success(
+                                "Excellent Resume! Your resume is highly ATS-friendly."
+                            )
+
+                        elif total_score >= 70:
+
+                            st.info(
+                                "Good Resume. A few improvements can make it even stronger."
+                            )
+
+                        elif total_score >= 50:
+
+                            st.warning(
+                                "Average Resume. Consider improving formatting, skills, and achievements."
+                            )
+
+                        else:
+
+                            st.error(
+                                "Your resume needs significant improvements to perform well in ATS systems."
+                            )
+
+                except Exception as e:
+
+                    st.error(
+                        f"Error: {e}"
+                    )

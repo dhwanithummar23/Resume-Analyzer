@@ -1,0 +1,281 @@
+/* ===========================================
+   AI Resume Analyzer - Modern UI
+=========================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+html,
+body,
+[class*="css"] {
+  font-family: "Poppins", sans-serif;
+}
+
+/* Background */
+
+.stApp {
+  background: linear-gradient(135deg, #eef5ff, #f8fbff);
+}
+
+/* Hide Streamlit Header */
+
+header {
+  visibility: hidden;
+}
+
+footer {
+  visibility: hidden;
+}
+
+#MainMenu {
+  visibility: hidden;
+}
+
+/* Main Container */
+
+.block-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  max-width: 1200px;
+}
+
+/* Hero Section */
+
+.hero {
+  text-align: center;
+  padding: 30px;
+  margin-bottom: 25px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  color: white;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.hero h1 {
+  font-size: 46px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.hero p {
+  font-size: 18px;
+  opacity: 0.95;
+}
+
+/* Section Titles */
+
+.card-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1565c0;
+  margin-bottom: 15px;
+}
+
+/* File Uploader */
+
+[data-testid="stFileUploader"] {
+  background: white;
+  border: 2px dashed #1565c0;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Text Area */
+
+.stTextArea textarea {
+  border-radius: 15px !important;
+  border: 2px solid #dce8f7 !important;
+
+  background: #ffffff !important;
+
+  color: #222 !important;
+
+  font-size: 15px !important;
+
+  padding: 15px !important;
+}
+
+/* Analyze Button */
+
+.stButton > button {
+  width: 100%;
+
+  height: 55px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #1565c0, #42a5f5);
+
+  color: white;
+
+  font-size: 18px;
+
+  font-weight: 600;
+
+  transition: 0.3s;
+}
+
+.stButton > button:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 10px 25px rgba(21, 101, 192, 0.35);
+}
+
+/* Progress Bar */
+
+.stProgress {
+  margin-top: 15px;
+
+  margin-bottom: 15px;
+}
+
+.stProgress > div > div {
+  background: linear-gradient(90deg, #1565c0, #42a5f5);
+}
+
+/* Metric */
+
+[data-testid="stMetric"] {
+  background: white;
+
+  border-radius: 15px;
+
+  padding: 18px;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+
+  border: 1px solid #e6eef8;
+}
+
+/* Analysis Card */
+
+.analysis-card {
+  background: #ffffff;
+  color: #222222 !important;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  line-height: 1.8;
+  font-size: 16px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e8eef7;
+}
+
+.analysis-card * {
+  color: #222222 !important;
+}
+
+/* Dataframe */
+
+[data-testid="stDataFrame"] {
+  border-radius: 15px;
+
+  overflow: hidden;
+}
+
+/* Bar Chart */
+
+[data-testid="stVegaLiteChart"] {
+  background: white;
+
+  border-radius: 15px;
+
+  padding: 15px;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Success */
+
+.stSuccess {
+  border-radius: 12px;
+}
+
+/* Warning */
+
+.stWarning {
+  border-radius: 12px;
+}
+
+/* Error */
+
+.stError {
+  border-radius: 12px;
+}
+
+/* Info */
+
+.stInfo {
+  border-radius: 12px;
+}
+
+/* Spinner */
+
+[data-testid="stSpinner"] {
+  color: #1565c0;
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eaf2fd;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1565c0;
+
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0d47a1;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 20px;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .hero p {
+    font-size: 15px;
+  }
+
+  .card-title {
+    font-size: 22px;
+  }
+
+  .stButton > button {
+    height: 50px;
+
+    font-size: 16px;
+  }
+}
+
+div[data-testid="stVerticalBlock"] {
+  gap: 1rem;
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.stMarkdown,
+.stMarkdown * {
+  color: #222222 !important;
+}
