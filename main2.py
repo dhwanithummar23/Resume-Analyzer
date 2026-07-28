@@ -7,6 +7,11 @@ import re
 import pandas as pd
 import json
 
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.colors import HexColor
+
 # -----------------------------------
 # Load Environment Variables
 # -----------------------------------
@@ -39,6 +44,57 @@ def load_css(file_name):
         )
 
 load_css("styles/style.css")
+
+# -----------------------------------
+# Generate PDF Report
+# -----------------------------------
+def generate_pdf_report(total_score, score_data, analysis_text):
+
+    doc = SimpleDocTemplate("Resume_Analysis_Report.pdf")
+    styles = getSampleStyleSheet()
+
+    title = styles["Heading1"]
+    title.alignment = TA_CENTER
+    title.textColor = HexColor("#1565C0")
+
+    heading = styles["Heading2"]
+    heading.textColor = HexColor("#1565C0")
+
+    normal = styles["BodyText"]
+
+    story = []
+
+    # Title
+    story.append(Paragraph("AI Resume Analyzer Report", title))
+    story.append(Paragraph("<br/><br/>", normal))
+
+    # Overall Score
+    story.append(Paragraph("Overall Resume Score", heading))
+    story.append(Paragraph(f"<b>{total_score}/100</b>", normal))
+    story.append(Paragraph("<br/>", normal))
+
+    # Score Breakdown
+    story.append(Paragraph("Score Breakdown", heading))
+
+    for category, score in score_data.items():
+        story.append(
+            Paragraph(f"<b>{category}</b> : {score}", normal)
+        )
+
+    story.append(Paragraph("<br/>", normal))
+
+    # AI Analysis
+    story.append(Paragraph("AI Analysis", heading))
+
+    analysis_text = analysis_text.replace("\n", "<br/>")
+
+    story.append(
+        Paragraph(analysis_text, normal)
+    )
+
+    doc.build(story)
+
+    return "Resume_Analysis_Report.pdf"
 
 # -----------------------------------
 # Header
@@ -254,6 +310,26 @@ Resume:
                                 "Your resume needs significant improvements to perform well in ATS systems."
                             )
 
+
+                        # -----------------------------------
+                        # Generate PDF Report
+                        # -----------------------------------
+                        pdf_file = generate_pdf_report(
+                            total_score,
+                            score_data,
+                            analysis_text
+                        )
+
+                        st.download_button(
+                            label="📥 Download Analysis Report",
+                            data=open(pdf_file, "rb").read(),
+                            file_name="Resume_Analysis_Report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+
+
+                
                 except Exception as e:
 
                     st.error(

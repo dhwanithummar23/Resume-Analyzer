@@ -279,3 +279,24 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 .stMarkdown * {
   color: #222222 !important;
 }
+
+/* Resume Score */
+div[data-testid="stMetricValue"] {
+  color: #222222 !important;
+}
+
+/* Resume Score Label */
+div[data-testid="stMetricLabel"] {
+  color: #222222 !important;
+}
+
+/* Metric label text */
+[data-testid="stMetricLabel"] * {
+  color: #222222 !important;
+}
+
+/* Spinner icon */
+div[data-testid="stSpinner"] svg {
+  stroke: #000000 !important;
+  fill: #000000 !important;
+}
