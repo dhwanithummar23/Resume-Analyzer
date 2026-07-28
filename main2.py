@@ -260,16 +260,36 @@ Resume:
 
                     st.markdown("### 📊 Score Breakdown")
 
-                    df = pd.DataFrame(
-                        {
-                            "Category": list(score_data.keys()),
-                            "Score": list(score_data.values())
-                        }
-                    )
+                    max_scores = {
+                        "Skills Match": 30,
+                        "Experience & Achievements": 30,
+                        "Clarity & Formatting": 20,
+                        "Overall Impression": 20
+                    }
 
-                    st.bar_chart(
-                        df.set_index("Category")
-                    )
+                    for category, score in score_data.items():
+
+                        max_score = max_scores.get(category, 100)
+                        percentage = score / max_score
+
+                        st.markdown(
+                            f"""
+                            <div class="progress-header">
+                                <span>{category}</span>
+                                <span>{score}/{max_score}</span>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                        st.markdown(
+                            f"""
+                            <div class="progress-container">
+                                <div class="progress-fill" style="width:{percentage*100}%">{percentage*100:.0f}%</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
                     total_score = sum(
                         score_data.values()
