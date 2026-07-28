@@ -145,46 +145,46 @@ if uploaded_file:
     )
 
     # Two-column layout
-    col1, col2 = st.columns(2)
+    # col1, col2 = st.columns(2)
 
     # -----------------------------------
     # Resume Preview
     # -----------------------------------
-    with col1:
+    # with col1:
 
-        st.markdown(
-            "<div class='card-title'>📄 Resume Preview</div>",
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        "<div class='card-title'>📄 Resume Preview</div>",
+        unsafe_allow_html=True
+    )
 
-        st.text_area(
-            "",
-            value=text_clean,
-            height=500
-        )
+    st.text_area(
+        "",
+        value=text_clean,
+        height=500
+    )
 
     # -----------------------------------
     # AI Analysis
     # -----------------------------------
-    with col2:
+    #with col2:
 
-        st.markdown(
-            "<div class='card-title'>🤖 AI Analysis</div>",
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        "<div class='card-title'>🤖 AI Analysis</div>",
+        unsafe_allow_html=True
+    )
 
-        analyze = st.button(
-            "🚀 Analyze Resume",
-            use_container_width=True
-        )
+    analyze = st.button(
+        "🚀 Analyze Resume",
+        use_container_width=True
+    )
 
-        if analyze:
+    if analyze:
 
-            with st.spinner("Analyzing Resume..."):
+        with st.spinner("Analyzing Resume..."):
                                 # -----------------------------------
                 # AI Prompt
                 # -----------------------------------
-                prompt = f"""
+            prompt = f"""
 You are an expert ATS Resume Analyzer.
 
 Analyze the following resume professionally and provide:
@@ -221,117 +221,117 @@ Resume:
 {text_clean}
 """
 
-                try:
+            try:
 
-                    response = client.models.generate_content(
-                        model="gemini-3.5-flash",
-                        contents=prompt
-                    )
+                response = client.models.generate_content(
+                    model="gemini-3.5-flash-lite",
+                    contents=prompt
+                )
 
-                    result = response.text.strip()
+                result = response.text.strip()
 
-                    parts = result.split("Score JSON:")
+                parts = result.split("Score JSON:")
 
-                    analysis_text = parts[0]
+                analysis_text = parts[0]
 
-                    st.markdown("### 📋 AI Analysis")
-                    st.markdown(analysis_text)
+                st.markdown("### 📋 AI Analysis")
+                st.markdown(analysis_text)
 
-                    score_data = None
+                score_data = None
 
-                    if len(parts) > 1:
+                if len(parts) > 1:
 
-                        try:
+                    try:
 
-                            score_data = json.loads(
-                                parts[1].strip()
-                            )
+                        score_data = json.loads(
+                            parts[1].strip()
+                        )
 
-                        except Exception:
+                    except Exception:
 
-                            st.warning(
-                                "Could not parse score JSON."
-                            )
+                        st.warning(
+                            "Could not parse score JSON."
+                        )
 
                                         # -----------------------------------
                     # Display Score Breakdown
                     # -----------------------------------
-                    if score_data:
+                if score_data:
 
-                        st.markdown("### 📊 Score Breakdown")
+                    st.markdown("### 📊 Score Breakdown")
 
-                        df = pd.DataFrame(
-                            {
-                                "Category": list(score_data.keys()),
-                                "Score": list(score_data.values())
-                            }
+                    df = pd.DataFrame(
+                        {
+                            "Category": list(score_data.keys()),
+                            "Score": list(score_data.values())
+                        }
+                    )
+
+                    st.bar_chart(
+                        df.set_index("Category")
+                    )
+
+                    total_score = sum(
+                        score_data.values()
+                    )
+
+                    st.markdown("### 🎯 Overall Score")
+
+                    st.progress(
+                        total_score / 100
+                    )
+
+                    st.metric(
+                        label="Resume Score",
+                        value=f"{total_score}/100"
+                    )
+
+                    if total_score >= 85:
+
+                        st.success(
+                            "Excellent Resume! Your resume is highly ATS-friendly."
                         )
 
-                        st.bar_chart(
-                            df.set_index("Category")
+                    elif total_score >= 70:
+
+                        st.info(
+                            "Good Resume. A few improvements can make it even stronger."
                         )
 
-                        total_score = sum(
-                            score_data.values()
+                    elif total_score >= 50:
+
+                        st.warning(
+                            "Average Resume. Consider improving formatting, skills, and achievements."
                         )
 
-                        st.markdown("### 🎯 Overall Score")
+                    else:
 
-                        st.progress(
-                            total_score / 100
+                        st.error(
+                            "Your resume needs significant improvements to perform well in ATS systems."
                         )
 
-                        st.metric(
-                            label="Resume Score",
-                            value=f"{total_score}/100"
-                        )
 
-                        if total_score >= 85:
+                    # -----------------------------------
+                    # Generate PDF Report
+                    # -----------------------------------
+                    pdf_file = generate_pdf_report(
+                        total_score,
+                        score_data,
+                        analysis_text
+                    )
 
-                            st.success(
-                                "Excellent Resume! Your resume is highly ATS-friendly."
-                            )
-
-                        elif total_score >= 70:
-
-                            st.info(
-                                "Good Resume. A few improvements can make it even stronger."
-                            )
-
-                        elif total_score >= 50:
-
-                            st.warning(
-                                "Average Resume. Consider improving formatting, skills, and achievements."
-                            )
-
-                        else:
-
-                            st.error(
-                                "Your resume needs significant improvements to perform well in ATS systems."
-                            )
-
-
-                        # -----------------------------------
-                        # Generate PDF Report
-                        # -----------------------------------
-                        pdf_file = generate_pdf_report(
-                            total_score,
-                            score_data,
-                            analysis_text
-                        )
-
-                        st.download_button(
-                            label="📥 Download Analysis Report",
-                            data=open(pdf_file, "rb").read(),
-                            file_name="Resume_Analysis_Report.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
+                    st.download_button(
+                        label="📥 Download Analysis Report",
+                        data=open(pdf_file, "rb").read(),
+                        file_name="Resume_Analysis_Report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
 
 
                 
-                except Exception as e:
+            except Exception as e:
 
-                    st.error(
-                        f"Error: {e}"
-                    )
+                st.error(
+                    f"Error: {e}"
+                )
