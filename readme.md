@@ -17,6 +17,8 @@ It helps students, freshers, and professionals optimize their resumes for better
 - 📊 Resume Scoring (Out of 100)
 - 📈 Category-wise Performance Breakdown
 - 🎯 ATS-Friendly Resume Evaluation
+- 💼 **Optional Job Description Match Analysis** — paste a job description to get a tailored match analysis (matching skills, skill gaps, and job-specific suggestions). If skipped, a general resume analysis is performed.
+- 🧾 Downloadable PDF Analysis Report
 - 🎨 Clean and Responsive Streamlit UI
 
 ---
@@ -132,15 +134,17 @@ streamlit run main2.py
 ## 🚀 How It Works
 
 1. Upload a Resume (PDF)
-2. Resume text is extracted using PyPDF2.
-3. The extracted text is cleaned and processed.
-4. Google Gemini analyzes the resume.
-5. The application generates:
+2. (Optional) Expand **"💼 Add Job Description (Optional)"** and paste a job description for a tailored match analysis. Leave it empty for a general analysis.
+3. Resume text is extracted using PyPDF2.
+4. The extracted text is cleaned and processed.
+5. Google Gemini analyzes the resume — against the job description if provided, otherwise a general analysis.
+6. The application generates:
    - Resume Summary
    - Key Skills
    - Improvement Suggestions
    - Resume Score
-6. Results are displayed in an interactive dashboard.
+   - (If job description provided) Job Match Analysis, Matching Skills, and Missing/Gap Skills
+7. Results are displayed in an interactive dashboard, and a PDF report can be downloaded.
 
 ---
 

@@ -106,6 +106,7 @@ st.markdown(
         <p>
             Upload your resume and receive an AI-powered analysis,
             key skills extraction, resume score, and improvement suggestions.
+            Optionally add a job description to get a tailored match analysis.
         </p>
     </div>
     """,
@@ -119,6 +120,21 @@ uploaded_file = st.file_uploader(
     "Upload Resume (PDF)",
     type=["pdf"]
 )
+
+# -----------------------------------
+# Optional: Job Description
+# -----------------------------------
+with st.expander("💼 Add Job Description (Optional)"):
+    st.markdown(
+        "Paste a job description below to get a **tailored resume match analysis**, "
+        "including matching skills, skill gaps, and job-specific suggestions. "
+        "Leave it empty if you only want a general resume analysis."
+    )
+    job_description = st.text_area(
+        "Job Description",
+        height=200,
+        placeholder="Paste the job description here (optional)..."
+    )
 
 # -----------------------------------
 # Process Uploaded Resume
@@ -182,9 +198,65 @@ if uploaded_file:
 
         with st.spinner("Analyzing Resume..."):
                                 # -----------------------------------
-                # AI Prompt
+                # AI Prompt (with/without Job Description)
                 # -----------------------------------
-            prompt = f"""
+            job_description_clean = (job_description or "").strip()
+
+            if job_description_clean:
+
+                st.info(
+                    "📊 Job description detected — running a tailored match analysis."
+                )
+
+                prompt = f"""
+You are an expert ATS Resume Analyzer.
+
+Analyze the following resume against the provided job description and provide:
+
+1. Professional Summary
+
+2. Key Skills (Bullet Points)
+
+3. Job Description Match Analysis
+
+4. Matching Skills
+
+5. Missing or Gap Skills
+
+6. Strengths
+
+7. Areas of Improvement
+
+8. Suggestions to Improve ATS Score and Job Match
+
+9. Score out of 100 using:
+
+- Skills Match (30)
+- Experience & Achievements (30)
+- Clarity & Formatting (20)
+- Overall Impression (20)
+
+At the end write exactly:
+
+Score JSON:
+{{
+    "Skills Match": 0,
+    "Experience & Achievements": 0,
+    "Clarity & Formatting": 0,
+    "Overall Impression": 0
+}}
+
+Job Description:
+
+{job_description_clean}
+
+Resume:
+
+{text_clean}
+"""
+            else:
+
+                prompt = f"""
 You are an expert ATS Resume Analyzer.
 
 Analyze the following resume professionally and provide:

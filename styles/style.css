@@ -80,6 +80,27 @@ footer {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
+/* Job Description Expander (Optional) */
+
+[data-testid="stExpander"] {
+  background: white;
+  border: 1px solid #dce8f7;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+[data-testid="stExpander"] details summary {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1565c0;
+}
+
+[data-testid="stExpander"] details summary span {
+  color: #1565c0;
+}
+
 /* Text Area */
 
 .stTextArea textarea {
