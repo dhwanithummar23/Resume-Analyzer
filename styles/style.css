@@ -74,8 +74,6 @@ footer {
 
 [data-testid="stFileUploader"] {
   background: white;
-  border: 2px dashed #1565c0;
-  border-radius: 15px;
   padding: 20px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
@@ -361,4 +359,8 @@ div[data-testid="stSpinner"] svg {
   font-size: 15px;
   font-weight: 600;
   color: #1f2937;
+}
+
+.st-emotion-cache-4bm6i2 {
+  background-color: #fff;
 }
