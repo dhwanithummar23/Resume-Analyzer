@@ -104,9 +104,9 @@ st.markdown(
     <div class="hero">
         <h1>📄 AI Resume Analyzer</h1>
         <p>
-            Upload your resume and receive an AI-powered analysis,
-            key skills extraction, resume score, and improvement suggestions.
-            Optionally add a job description to get a tailored match analysis.
+            Upload your resume and paste the job description to receive
+            an AI-powered ATS analysis, resume score, skill matching,
+            gap analysis, and personalized improvement suggestions.
         </p>
     </div>
     """,
@@ -121,20 +121,13 @@ uploaded_file = st.file_uploader(
     type=["pdf"]
 )
 
-# -----------------------------------
-# Optional: Job Description
-# -----------------------------------
-with st.expander("💼 Add Job Description (Optional)"):
-    st.markdown(
-        "Paste a job description below to get a **tailored resume match analysis**, "
-        "including matching skills, skill gaps, and job-specific suggestions. "
-        "Leave it empty if you only want a general resume analysis."
-    )
-    job_description = st.text_area(
-        "Job Description",
-        height=200,
-        placeholder="Paste the job description here (optional)..."
-    )
+st.markdown("### 💼 Job Description")
+
+job_description = st.text_area(
+    "Paste the Job Description",
+    height=220,
+    placeholder="Paste the complete job description here..."
+)
 
 # -----------------------------------
 # Process Uploaded Resume
@@ -191,108 +184,71 @@ if uploaded_file:
 
     analyze = st.button(
         "🚀 Analyze Resume",
-        use_container_width=True
+        use_container_width=True,
+        disabled=not (uploaded_file and job_description.strip())
     )
 
     if analyze:
 
         with st.spinner("Analyzing Resume..."):
-                                # -----------------------------------
-                # AI Prompt (with/without Job Description)
-                # -----------------------------------
-            job_description_clean = (job_description or "").strip()
+                                
+            job_description_clean = job_description.strip()
 
-            if job_description_clean:
+            # Check if Job Description is provided
+            if not job_description_clean:
+                st.error("⚠️ Please paste a Job Description before analyzing the resume.")
+                st.stop()
 
-                st.info(
-                    "📊 Job description detected — running a tailored match analysis."
-                )
+            st.info(
+                "📊 Job description detected — running a tailored match analysis."
+            )
 
-                prompt = f"""
-You are an expert ATS Resume Analyzer.
+            prompt = f"""
+    You are an expert ATS Resume Analyzer.
 
-Analyze the following resume against the provided job description and provide:
+    Analyze the following resume against the provided job description and provide:
 
-1. Professional Summary
+    1. Professional Summary
 
-2. Key Skills (Bullet Points)
+    2. Key Skills (Bullet Points)
 
-3. Job Description Match Analysis
+    3. Job Description Match Analysis
 
-4. Matching Skills
+    4. Matching Skills
 
-5. Missing or Gap Skills
+    5. Missing or Gap Skills
 
-6. Strengths
+    6. Strengths
 
-7. Areas of Improvement
+    7. Areas of Improvement
 
-8. Suggestions to Improve ATS Score and Job Match
+    8. Suggestions to Improve ATS Score and Job Match
 
-9. Score out of 100 using:
+    9. Score out of 100 using:
 
-- Skills Match (30)
-- Experience & Achievements (30)
-- Clarity & Formatting (20)
-- Overall Impression (20)
+    - Skills Match (30)
+    - Experience & Achievements (30)
+    - Clarity & Formatting (20)
+    - Overall Impression (20)
 
-At the end write exactly:
+    At the end write exactly:
 
-Score JSON:
-{{
-    "Skills Match": 0,
-    "Experience & Achievements": 0,
-    "Clarity & Formatting": 0,
-    "Overall Impression": 0
-}}
+    Score JSON:
+    {{
+        "Skills Match": 0,
+        "Experience & Achievements": 0,
+        "Clarity & Formatting": 0,
+        "Overall Impression": 0
+    }}
 
-Job Description:
+    Job Description:
 
-{job_description_clean}
+    {job_description_clean}
 
-Resume:
+    Resume:
 
-{text_clean}
-"""
-            else:
-
-                prompt = f"""
-You are an expert ATS Resume Analyzer.
-
-Analyze the following resume professionally and provide:
-
-1. Professional Summary
-
-2. Key Skills (Bullet Points)
-
-3. Strengths
-
-4. Areas of Improvement
-
-5. Suggestions to Improve ATS Score
-
-6. Score out of 100 using:
-
-- Skills Match (30)
-- Experience & Achievements (30)
-- Clarity & Formatting (20)
-- Overall Impression (20)
-
-At the end write exactly:
-
-Score JSON:
-{{
-    "Skills Match": 0,
-    "Experience & Achievements": 0,
-    "Clarity & Formatting": 0,
-    "Overall Impression": 0
-}}
-
-Resume:
-
-{text_clean}
-"""
-
+    {text_clean}
+    """
             try:
 
                 response = client.models.generate_content(
@@ -325,9 +281,9 @@ Resume:
                             "Could not parse score JSON."
                         )
 
-                                        # -----------------------------------
-                    # Display Score Breakdown
-                    # -----------------------------------
+                                                # -----------------------------------
+                            # Display Score Breakdown
+                            # -----------------------------------
                 if score_data:
 
                     st.markdown("### 📊 Score Breakdown")
@@ -421,7 +377,7 @@ Resume:
                     )
 
 
-                
+                    
             except Exception as e:
 
                 st.error(
