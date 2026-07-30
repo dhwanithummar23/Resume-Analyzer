@@ -167,7 +167,7 @@ if uploaded_file:
     )
 
     st.text_area(
-        "",
+        "Analysis Report",
         value=text_clean,
         height=500
     )
@@ -204,6 +204,9 @@ if uploaded_file:
             )
 
             prompt = f"""
+    Return the entire report in plain text only.
+    Do not use Markdown formatting such as ###, **, *, -, or •.
+    Use simple numbered headings and plain text lists.
     You are an expert ATS Resume Analyzer.
 
     Analyze the following resume against the provided job description and provide:
