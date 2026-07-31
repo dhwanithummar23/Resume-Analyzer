@@ -56,7 +56,7 @@ st.markdown("""
     </div>
     <div class="nav-links">
         <a href="#Home" id="home">Home</a>
-        <a href="#" id="explore-link">Explore</a>
+        <a href="#" id="explore-link">Analyze</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
