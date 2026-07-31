@@ -46,6 +46,21 @@ def load_css(file_name):
 load_css("styles/style.css")
 
 # -----------------------------------
+# Navbar
+# -----------------------------------
+st.markdown("""
+<div class="navbar">
+    <div class="navbar-title">
+        📄 AI Powered Resume Analyzer
+    </div>
+    <div class="nav-links">
+        <a href="#Home" id="home">Home</a>
+        <a href="#Explore" id="explore">Explore</a>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# -----------------------------------
 # Generate PDF Report
 # -----------------------------------
 def generate_pdf_report(total_score, score_data, analysis_text):
@@ -112,10 +127,105 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+# ==========================================
+# Welcome Section
+# ==========================================
+
+st.subheader("👋 Welcome to AI Powered Resume Analyzer")
+
+st.info("""
+Analyze your resume against any job description using AI.
+
+Our system compares your resume with the job description and provides:
+
+- 📊 ATS Compatibility Score
+- 🎯 Skill Match Analysis
+- ⚠ Missing Skills
+- 💪 Resume Strengths
+- 💡 Personalized Improvement Suggestions
+
+Upload your resume, paste the job description, and receive a detailed report within seconds.
+""")
+
+st.divider()
+
+# ==========================================
+# Do's & Don'ts
+# ==========================================
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.success("### ✅ Do's")
+
+    st.markdown("""
+- Upload your resume in **PDF** format.
+- Paste the **complete Job Description**.
+- Use ATS-friendly formatting.
+- Highlight measurable achievements.
+- Include relevant technical skills.
+- Keep contact information updated.
+""")
+
+with col2:
+    st.error("### ❌ Don'ts")
+
+    st.markdown("""
+- Don't upload scanned resumes.
+- Don't use excessive graphics or tables.
+- Don't stuff keywords unnaturally.
+- Don't leave important sections incomplete.
+- Don't use outdated information.
+- Don't submit unrelated resumes.
+""")
+
+st.divider()
+
+# ==========================================
+# How It Works
+# ==========================================
+
+st.subheader("⚙️ How It Works")
+
+step1, step2, step3, step4 = st.columns(4)
+
+with step1:
+    st.info("""
+### 📄 Step 1
+
+Upload your resume in PDF format.
+""")
+
+with step2:
+    st.info("""
+### 💼 Step 2
+
+Paste the Job Description.
+""")
+
+with step3:
+    st.info("""
+### 🤖 Step 3
+
+AI compares your resume with the job requirements.
+""")
+
+with step4:
+    st.info("""
+### 📊 Step 4
+
+View ATS score, missing skills, recommendations, and download the PDF report.
+""")
+
+st.divider()
+
 
 # -----------------------------------
 # Upload Resume
 # -----------------------------------
+
+st.markdown("### 📄Upload Your Resume")
+
 uploaded_file = st.file_uploader(
     "Upload Resume (PDF)",
     type=["pdf"]

@@ -426,3 +426,190 @@ div[data-testid="stSpinner"] svg {
   background-color: #1e88e5 !important ;
   color: #e5e7eb !important;
 }
+
+/* ===========================================
+   Full Width Navbar
+=========================================== */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+
+  width: 100vw;
+  height: 72px;
+
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  background: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: left;
+
+  padding-left: 20px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-title {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: "Poppins", sans-serif;
+}
+
+div.navbar {
+  margin-bottom: 50px;
+  position: sticky;
+  top: 0;
+}
+
+.nav-links {
+  padding-left: 1000px;
+}
+
+.nav-links a {
+  margin-left: 20px;
+  margin-right: 20px;
+  font-size: 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.home {
+  margin-right: 0px;
+}
+
+.explore {
+  margin-right: 40px;
+}
+
+.nav-links a:hover {
+  font-weight: 700;
+  transform: translateY(-2px);
+}
+
+/* ===========================================
+   Landing Page Styling
+=========================================== */
+
+/* Section Heading */
+
+h3 {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+  margin-bottom: 15px !important;
+}
+
+/* Divider */
+
+hr {
+  border: none;
+  border-top: 1px solid #d9e7f7;
+  margin: 30px 0;
+}
+
+/* Info Box */
+
+[data-testid="stInfo"] {
+  color: #000 !important;
+  background: #ffffff !important;
+  border: 1px solid #dce8f7 !important;
+  border-left: 6px solid #1565c0 !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Success Box */
+
+[data-testid="stSuccess"] {
+  background: #ffffff !important;
+  border: 1px solid #dce8f7 !important;
+  border-left: 6px solid #22c55e !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Error Box */
+
+[data-testid="stError"] {
+  background: #ffffff !important;
+  border: 1px solid #dce8f7 !important;
+  border-left: 6px solid #ef4444 !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Hover Animation */
+
+[data-testid="stInfo"],
+[data-testid="stSuccess"],
+[data-testid="stError"] {
+  transition: all 0.3s ease;
+}
+
+[data-testid="stInfo"]:hover,
+[data-testid="stSuccess"]:hover,
+[data-testid="stError"]:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* Markdown Text */
+
+.stMarkdown p,
+.stMarkdown li {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* Lists */
+
+.stMarkdown ul {
+  padding-left: 22px;
+}
+
+.stMarkdown li {
+  margin-bottom: 8px;
+}
+
+/* Step Cards */
+
+[data-testid="column"] [data-testid="stInfo"] {
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  h3 {
+    font-size: 28px !important;
+  }
+
+  [data-testid="column"] [data-testid="stInfo"] {
+    height: auto;
+  }
+}
+
+.st-emotion-cache-4rsbii {
+  padding-right: 0;
+}
+
+.stAlertContainer {
+  color: #000;
+}
+
+html {
+  scroll-behavior: smooth;
+}
