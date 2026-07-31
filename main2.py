@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from google import genai
 import os
 from PyPDF2 import PdfReader
@@ -55,10 +56,38 @@ st.markdown("""
     </div>
     <div class="nav-links">
         <a href="#Home" id="home">Home</a>
-        <a href="#Explore" id="explore">Explore</a>
+        <a href="#" id="explore-link">Explore</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+components.html(
+    """
+    <script>
+    function attachScroll() {
+        const explore = parent.document.getElementById("explore-link");
+
+        if (explore) {
+            explore.onclick = function(e) {
+                e.preventDefault();
+
+                const target = parent.document.getElementById("upload-section");
+
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+            };
+        }
+    }
+
+    setTimeout(attachScroll, 500);
+    </script>
+    """,
+    height=0,
+)
 
 # -----------------------------------
 # Generate PDF Report
@@ -223,6 +252,13 @@ st.divider()
 # -----------------------------------
 # Upload Resume
 # -----------------------------------
+
+st.markdown(
+    """
+    <div id="upload-section"></div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.markdown("### 📄Upload Your Resume")
 
