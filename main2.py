@@ -532,3 +532,15 @@ if uploaded_file:
                 st.error(
                     f"Error: {e}"
                 )
+
+st.markdown("""
+<div class="footer-divider"></div>
+<div class="footer">
+    © 2026 AI Resume Analyzer • Made with ❤️ by Dhwani
+    <div class="footer-divider2"></div>
+    <p>Analyze your resume using AI and compare it with any job
+        description to improve ATS compatibility and increase your
+        interview chances.
+    </p>
+</div>
+""", unsafe_allow_html=True)

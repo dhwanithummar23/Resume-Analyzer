@@ -433,7 +433,7 @@ div[data-testid="stSpinner"] svg {
 
 .navbar {
   position: sticky;
-  top: 0;
+  top: 0 !important;
   z-index: 999;
 
   width: 100vw;
@@ -612,4 +612,41 @@ hr {
 
 html {
   scroll-behavior: smooth;
+}
+
+.footer {
+  all: unset;
+  position: static;
+  bottom: 0;
+
+  margin-left: 0;
+
+  width: 100vw;
+  height: 72px;
+
+  /* background: #fff; */
+
+  display: flex;
+  flex-wrap: wrap;
+
+  /* padding-left: 20px; */
+
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); */
+}
+
+hr {
+  color: #000;
+}
+
+.footer-divider {
+  width: 100%;
+  height: 1px;
+  background: #000;
+  margin: 50px 0 25px;
+}
+
+.footer-divider2 {
+  width: 100%;
+  height: 1px;
+  background: #eaf2fd;
 }
