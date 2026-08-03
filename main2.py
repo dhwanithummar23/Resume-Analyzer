@@ -157,6 +157,9 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
+st.markdown("""
+    <div class="navbar-divider"></div>
+    """, unsafe_allow_html=True)
 
 components.html(
     """
