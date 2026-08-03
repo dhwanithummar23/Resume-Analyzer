@@ -69,3 +69,11 @@ reports/
 # Misc
 *.bak
 *.swp
+
+/auth/__pycache__/
+/__pycache__/
+/.qodo
+/venv
+users.db
+
+.env

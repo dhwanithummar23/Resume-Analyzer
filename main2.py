@@ -8,6 +8,7 @@ import re
 import pandas as pd
 import json
 
+from auth.database import *
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER
@@ -34,6 +35,18 @@ st.set_page_config(
     layout="wide"
 )
 
+create_users_table()
+create_history_table()
+
+# -----------------------------------
+# Session State
+# -----------------------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
 # -----------------------------------
 # Load External CSS
 # -----------------------------------
@@ -47,16 +60,100 @@ def load_css(file_name):
 load_css("styles/style.css")
 
 # -----------------------------------
+# Handle Logout via Query Params
+# -----------------------------------
+if st.query_params.get("logout") == "true":
+    st.session_state.logged_in = False
+    st.session_state.username = ""
+    st.query_params.clear()
+    st.rerun()
+
+# -----------------------------------
+# Login / Signup
+# -----------------------------------
+if not st.session_state.logged_in:
+
+    st.markdown("""
+        <div class="login-title">
+            🔐 AI Resume Analyzer
+        </div>
+
+        <div class="login-subtitle">
+            Login or create an account to continue.
+        </div>
+        """, unsafe_allow_html=True)
+
+    tab1, tab2 = st.tabs(["Login", "Sign Up"])
+
+    with tab1:
+
+        username = st.text_input("Username", key="login_username")
+        password = st.text_input(
+            "Password",
+            type="password",
+            key="login_password"
+        )
+
+        if st.button("Login"):
+
+            user = login_user(username, password)
+
+            if user:
+
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.rerun()
+
+            else:
+
+                st.error("Invalid username or password.")
+
+    with tab2:
+
+        new_username = st.text_input(
+            "Choose Username",
+            key="signup_username"
+        )
+
+        new_password = st.text_input(
+            "Choose Password",
+            type="password",
+            key="signup_password"
+        )
+
+        if st.button("Create Account"):
+
+            success = register_user(
+                new_username,
+                new_password
+            )
+
+            if success:
+
+                st.success("Account created successfully!")
+
+            else:
+
+                st.error("Username already exists.")
+
+    st.stop()
+
+# -----------------------------------
 # Navbar
 # -----------------------------------
-st.markdown("""
+st.markdown(f"""
 <div class="navbar">
-    <div class="navbar-title">
-        📄 AI Powered Resume Analyzer
+    <div class="navbar-left">
+        <div class="navbar-title">
+            📄 AI Powered Resume Analyzer
+        </div>
     </div>
     <div class="nav-links">
-        <a href="#Home" id="home">Home</a>
-        <a href="#" id="explore-link">Analyze</a>
+        <span class="nav-user">👋 {st.session_state.username}</span>
+        <a href="#" id="home-link">Home</a>
+        <a href="#" id="analyze-link">Analyze</a>
+        <a href="#" id="history-link">History</a>
+        <a href="?logout=true" id="logout-link">Logout</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -64,26 +161,59 @@ st.markdown("""
 components.html(
     """
     <script>
-    function attachScroll() {
-        const explore = parent.document.getElementById("explore-link");
 
-        if (explore) {
-            explore.onclick = function(e) {
+    function attachHandlers() {
+
+        const analyze = parent.document.getElementById("analyze-link");
+
+        if (analyze) {
+
+            analyze.onclick = function(e) {
+
                 e.preventDefault();
 
                 const target = parent.document.getElementById("upload-section");
 
                 if (target) {
+
                     target.scrollIntoView({
                         behavior: "smooth",
                         block: "start"
                     });
+
                 }
+
             };
+
         }
+
+        const history = parent.document.getElementById("history-link");
+
+        if (history) {
+
+            history.onclick = function(e) {
+
+                e.preventDefault();
+
+                const target = parent.document.getElementById("history-section");
+
+                if (target) {
+
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+
+                }
+
+            };
+
+        }
+
     }
 
-    setTimeout(attachScroll, 500);
+    setTimeout(attachHandlers, 500);
+
     </script>
     """,
     height=0,
@@ -140,398 +270,439 @@ def generate_pdf_report(total_score, score_data, analysis_text):
 
     return "Resume_Analysis_Report.pdf"
 
-# -----------------------------------
-# Header
-# -----------------------------------
-st.markdown(
-    """
-    <div class="hero">
-        <h1>📄 AI Resume Analyzer</h1>
-        <p>
-            Upload your resume and paste the job description to receive
-            an AI-powered ATS analysis, resume score, skill matching,
-            gap analysis, and personalized improvement suggestions.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-# ==========================================
-# Welcome Section
-# ==========================================
 
-st.subheader("👋 Welcome to AI Powered Resume Analyzer")
-
-st.info("""
-Analyze your resume against any job description using AI.
-
-Our system compares your resume with the job description and provides:
-
-- 📊 ATS Compatibility Score
-- 🎯 Skill Match Analysis
-- ⚠ Missing Skills
-- 💪 Resume Strengths
-- 💡 Personalized Improvement Suggestions
-
-Upload your resume, paste the job description, and receive a detailed report within seconds.
-""")
-
-st.divider()
-
-# ==========================================
-# Do's & Don'ts
-# ==========================================
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.success("### ✅ Do's")
-
-    st.markdown("""
-- Upload your resume in **PDF** format.
-- Paste the **complete Job Description**.
-- Use ATS-friendly formatting.
-- Highlight measurable achievements.
-- Include relevant technical skills.
-- Keep contact information updated.
-""")
-
-with col2:
-    st.error("### ❌ Don'ts")
-
-    st.markdown("""
-- Don't upload scanned resumes.
-- Don't use excessive graphics or tables.
-- Don't stuff keywords unnaturally.
-- Don't leave important sections incomplete.
-- Don't use outdated information.
-- Don't submit unrelated resumes.
-""")
-
-st.divider()
-
-# ==========================================
-# How It Works
-# ==========================================
-
-st.subheader("⚙️ How It Works")
-
-step1, step2, step3, step4 = st.columns(4)
-
-with step1:
-    st.info("""
-### 📄 Step 1
-
-Upload your resume in PDF format.
-""")
-
-with step2:
-    st.info("""
-### 💼 Step 2
-
-Paste the Job Description.
-""")
-
-with step3:
-    st.info("""
-### 🤖 Step 3
-
-AI compares your resume with the job requirements.
-""")
-
-with step4:
-    st.info("""
-### 📊 Step 4
-
-View ATS score, missing skills, recommendations, and download the PDF report.
-""")
-
-st.divider()
-
-
-# -----------------------------------
-# Upload Resume
-# -----------------------------------
-
-st.markdown(
-    """
-    <div id="upload-section"></div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown("### 📄Upload Your Resume")
-
-uploaded_file = st.file_uploader(
-    "Upload Resume (PDF)",
-    type=["pdf"]
-)
-
-st.markdown("### 💼 Job Description")
-
-job_description = st.text_area(
-    "Paste the Job Description",
-    height=220,
-    placeholder="Paste the complete job description here..."
-)
-
-# -----------------------------------
-# Process Uploaded Resume
-# -----------------------------------
-if uploaded_file:
-
-    pdf = PdfReader(uploaded_file)
-
-    text = ""
-
-    for page in pdf.pages:
-
-        page_text = page.extract_text()
-
-        if page_text:
-
-            text += page_text + "\n"
-
-    # Clean extracted text
-    text_clean = re.sub(
-        r"(?<!\n)\n(?!\n)",
-        " ",
-        text
+if True:
+    # -----------------------------------
+    # Header
+    # -----------------------------------
+    st.markdown(
+        """
+        <div class="hero">
+            <h1>📄 AI Resume Analyzer</h1>
+            <p>
+                Upload your resume and paste the job description to receive
+                an AI-powered ATS analysis, resume score, skill matching,
+                gap analysis, and personalized improvement suggestions.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+    # ==========================================
+    # Welcome Section
+    # ==========================================
 
-    # Two-column layout
-    # col1, col2 = st.columns(2)
+    st.subheader("👋 Welcome to AI Powered Resume Analyzer")
+
+    st.info("""
+    Analyze your resume against any job description using AI.
+
+    Our system compares your resume with the job description and provides:
+
+    - 📊 ATS Compatibility Score
+    - 🎯 Skill Match Analysis
+    - ⚠ Missing Skills
+    - 💪 Resume Strengths
+    - 💡 Personalized Improvement Suggestions
+
+    Upload your resume, paste the job description, and receive a detailed report within seconds.
+    """)
+
+    st.divider()
+
+    # ==========================================
+    # Do's & Don'ts
+    # ==========================================
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.success("### ✅ Do's")
+
+        st.markdown("""
+    - Upload your resume in **PDF** format.
+    - Paste the **complete Job Description**.
+    - Use ATS-friendly formatting.
+    - Highlight measurable achievements.
+    - Include relevant technical skills.
+    - Keep contact information updated.
+    """)
+
+    with col2:
+        st.error("### ❌ Don'ts")
+
+        st.markdown("""
+    - Don't upload scanned resumes.
+    - Don't use excessive graphics or tables.
+    - Don't stuff keywords unnaturally.
+    - Don't leave important sections incomplete.
+    - Don't use outdated information.
+    - Don't submit unrelated resumes.
+    """)
+
+    st.divider()
+
+    # ==========================================
+    # How It Works
+    # ==========================================
+
+    st.subheader("⚙️ How It Works")
+
+    step1, step2, step3, step4 = st.columns(4)
+
+    with step1:
+        st.info("""
+    ### 📄 Step 1
+
+    Upload your resume in PDF format.
+    """)
+
+    with step2:
+        st.info("""
+    ### 💼 Step 2
+
+    Paste the Job Description.
+    """)
+
+    with step3:
+        st.info("""
+    ### 🤖 Step 3
+
+    AI compares your resume with the job requirements.
+    """)
+
+    with step4:
+        st.info("""
+    ### 📊 Step 4
+
+    View ATS score, missing skills, recommendations, and download the PDF report.
+    """)
+
+    st.divider()
+
 
     # -----------------------------------
-    # Resume Preview
+    # Upload Resume
     # -----------------------------------
-    # with col1:
 
     st.markdown(
-        "<div class='card-title'>📄 Resume Preview</div>",
+        """
+        <div id="upload-section" style="height:1px;"></div>
+        """,
         unsafe_allow_html=True
     )
 
-    st.text_area(
-        "Analysis Report",
-        value=text_clean,
-        height=500
+    st.markdown("### 📄Upload Your Resume")
+
+    uploaded_file = st.file_uploader(
+        "Upload Resume (PDF)",
+        type=["pdf"]
+    )
+
+    st.markdown("### 💼 Job Description")
+
+    job_description = st.text_area(
+        "Paste the Job Description",
+        height=220,
+        placeholder="Paste the complete job description here..."
     )
 
     # -----------------------------------
-    # AI Analysis
+    # Process Uploaded Resume
     # -----------------------------------
-    #with col2:
+    if uploaded_file:
 
-    st.markdown(
-        "<div class='card-title'>🤖 AI Analysis</div>",
-        unsafe_allow_html=True
-    )
+        pdf = PdfReader(uploaded_file)
 
-    analyze = st.button(
-        "🚀 Analyze Resume",
-        use_container_width=True,
-        disabled=not (uploaded_file and job_description.strip())
-    )
+        text = ""
 
-    if analyze:
+        for page in pdf.pages:
 
-        with st.spinner("Analyzing Resume..."):
-                                
-            job_description_clean = job_description.strip()
+            page_text = page.extract_text()
 
-            # Check if Job Description is provided
-            if not job_description_clean:
-                st.error("⚠️ Please paste a Job Description before analyzing the resume.")
-                st.stop()
+            if page_text:
 
-            st.info(
-                "📊 Job description detected — running a tailored match analysis."
-            )
+                text += page_text + "\n"
 
-            prompt = f"""
-    Return the entire report in plain text only.
-    Do not use Markdown formatting such as ###, **, *, -, or •.
-    Use simple numbered headings and plain text lists.
-    You are an expert ATS Resume Analyzer.
+        # Clean extracted text
+        text_clean = re.sub(
+            r"(?<!\n)\n(?!\n)",
+            " ",
+            text
+        )
 
-    Analyze the following resume against the provided job description and provide:
+        # Two-column layout
+        # col1, col2 = st.columns(2)
 
-    1. Professional Summary
+        # -----------------------------------
+        # Resume Preview
+        # -----------------------------------
+        # with col1:
 
-    2. Key Skills (Bullet Points)
+        st.markdown(
+            "<div class='card-title'>📄 Resume Preview</div>",
+            unsafe_allow_html=True
+        )
 
-    3. Job Description Match Analysis
+        st.text_area(
+            "Analysis Report",
+            value=text_clean,
+            height=500
+        )
 
-    4. Matching Skills
+        # -----------------------------------
+        # AI Analysis
+        # -----------------------------------
+        #with col2:
 
-    5. Missing or Gap Skills
+        st.markdown(
+            "<div class='card-title'>🤖 AI Analysis</div>",
+            unsafe_allow_html=True
+        )
 
-    6. Strengths
+        analyze = st.button(
+            "🚀 Analyze Resume",
+            use_container_width=True,
+            disabled=not (uploaded_file and job_description.strip())
+        )
 
-    7. Areas of Improvement
+        if analyze:
 
-    8. Suggestions to Improve ATS Score and Job Match
+            with st.spinner("Analyzing Resume..."):
+                                    
+                job_description_clean = job_description.strip()
 
-    9. Score out of 100 using:
+                # Check if Job Description is provided
+                if not job_description_clean:
+                    st.error("⚠️ Please paste a Job Description before analyzing the resume.")
+                    st.stop()
 
-    - Skills Match (30)
-    - Experience & Achievements (30)
-    - Clarity & Formatting (20)
-    - Overall Impression (20)
-
-    At the end write exactly:
-
-    Score JSON:
-    {{
-        "Skills Match": 0,
-        "Experience & Achievements": 0,
-        "Clarity & Formatting": 0,
-        "Overall Impression": 0
-    }}
-
-    Job Description:
-
-    {job_description_clean}
-
-    Resume:
-
-    {text_clean}
-    """
-            try:
-
-                response = client.models.generate_content(
-                    model="gemini-3.5-flash-lite",
-                    contents=prompt
+                st.info(
+                    "📊 Job description detected — running a tailored match analysis."
                 )
 
-                result = response.text.strip()
+                prompt = f"""
+        Return the entire report in plain text only.
+        Do not use Markdown formatting such as ###, **, *, -, or •.
+        Use simple numbered headings and plain text lists.
+        You are an expert ATS Resume Analyzer.
 
-                parts = result.split("Score JSON:")
+        Analyze the following resume against the provided job description and provide:
 
-                analysis_text = parts[0]
+        1. Professional Summary
 
-                st.markdown("### 📋 AI Analysis")
-                st.markdown(analysis_text)
+        2. Key Skills (Bullet Points)
 
-                score_data = None
+        3. Job Description Match Analysis
 
-                if len(parts) > 1:
+        4. Matching Skills
 
-                    try:
+        5. Missing or Gap Skills
 
-                        score_data = json.loads(
-                            parts[1].strip()
-                        )
+        6. Strengths
 
-                    except Exception:
+        7. Areas of Improvement
 
-                        st.warning(
-                            "Could not parse score JSON."
-                        )
+        8. Suggestions to Improve ATS Score and Job Match
 
-                                                # -----------------------------------
-                            # Display Score Breakdown
-                            # -----------------------------------
-                if score_data:
+        9. Score out of 100 using:
 
-                    st.markdown("### 📊 Score Breakdown")
+        - Skills Match (30)
+        - Experience & Achievements (30)
+        - Clarity & Formatting (20)
+        - Overall Impression (20)
 
-                    max_scores = {
-                        "Skills Match": 30,
-                        "Experience & Achievements": 30,
-                        "Clarity & Formatting": 20,
-                        "Overall Impression": 20
-                    }
+        At the end write exactly:
 
-                    for category, score in score_data.items():
+        Score JSON:
+        {{
+            "Skills Match": 0,
+            "Experience & Achievements": 0,
+            "Clarity & Formatting": 0,
+            "Overall Impression": 0
+        }}
 
-                        max_score = max_scores.get(category, 100)
-                        percentage = score / max_score
+        Job Description:
 
-                        st.markdown(
-                            f"""
-                            <div class="progress-header">
-                                <span>{category}</span>
-                                <span>{score}/{max_score}</span>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+        {job_description_clean}
 
-                        st.markdown(
-                            f"""
-                            <div class="progress-container">
-                                <div class="progress-fill" style="width:{percentage*100}%">{percentage*100:.0f}%</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+        Resume:
 
-                    total_score = sum(
-                        score_data.values()
+        {text_clean}
+        """
+                try:
+
+                    response = client.models.generate_content(
+                        model="gemini-3.5-flash-lite",
+                        contents=prompt
                     )
 
-                    st.markdown("### 🎯 Overall Score")
+                    result = response.text.strip()
 
-                    st.progress(
-                        total_score / 100
-                    )
+                    parts = result.split("Score JSON:")
 
-                    st.metric(
-                        label="Resume Score",
-                        value=f"{total_score}/100"
-                    )
+                    analysis_text = parts[0]
 
-                    if total_score >= 85:
+                    st.markdown("### 📋 AI Analysis")
+                    st.markdown(analysis_text)
 
-                        st.success(
-                            "Excellent Resume! Your resume is highly ATS-friendly."
+                    score_data = None
+
+                    if len(parts) > 1:
+
+                        try:
+
+                            score_data = json.loads(
+                                parts[1].strip()
+                            )
+
+                        except Exception:
+
+                            st.warning(
+                                "Could not parse score JSON."
+                            )
+
+                                                    # -----------------------------------
+                                # Display Score Breakdown
+                                # -----------------------------------
+                    if score_data:
+
+                        st.markdown("### 📊 Score Breakdown")
+
+                        max_scores = {
+                            "Skills Match": 30,
+                            "Experience & Achievements": 30,
+                            "Clarity & Formatting": 20,
+                            "Overall Impression": 20
+                        }
+
+                        for category, score in score_data.items():
+
+                            max_score = max_scores.get(category, 100)
+                            percentage = score / max_score
+
+                            st.markdown(
+                                f"""
+                                <div class="progress-header">
+                                    <span>{category}</span>
+                                    <span>{score}/{max_score}</span>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
+
+                            st.markdown(
+                                f"""
+                                <div class="progress-container">
+                                    <div class="progress-fill" style="width:{percentage*100}%">{percentage*100:.0f}%</div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
+
+                        total_score = sum(
+                            score_data.values()
                         )
 
-                    elif total_score >= 70:
+                        st.markdown("### 🎯 Overall Score")
 
-                        st.info(
-                            "Good Resume. A few improvements can make it even stronger."
+                        st.progress(
+                            total_score / 100
                         )
 
-                    elif total_score >= 50:
-
-                        st.warning(
-                            "Average Resume. Consider improving formatting, skills, and achievements."
+                        st.metric(
+                            label="Resume Score",
+                            value=f"{total_score}/100"
                         )
 
-                    else:
+                        if total_score >= 85:
 
-                        st.error(
-                            "Your resume needs significant improvements to perform well in ATS systems."
+                            st.success(
+                                "Excellent Resume! Your resume is highly ATS-friendly."
+                            )
+
+                        elif total_score >= 70:
+
+                            st.info(
+                                "Good Resume. A few improvements can make it even stronger."
+                            )
+
+                        elif total_score >= 50:
+
+                            st.warning(
+                                "Average Resume. Consider improving formatting, skills, and achievements."
+                            )
+
+                        else:
+
+                            st.error(
+                                "Your resume needs significant improvements to perform well in ATS systems."
+                            )
+
+
+                        # -----------------------------------
+                        # Generate PDF Report
+                        # -----------------------------------
+                        save_history(
+                            st.session_state.username,
+                            total_score,
+                            job_description_clean,
+                            analysis_text
                         )
 
+                        pdf_file = generate_pdf_report(
+                            total_score,
+                            score_data,
+                            analysis_text
+                        )
 
-                    # -----------------------------------
-                    # Generate PDF Report
-                    # -----------------------------------
-                    pdf_file = generate_pdf_report(
-                        total_score,
-                        score_data,
-                        analysis_text
-                    )
-
-                    st.download_button(
-                        label="📥 Download Analysis Report",
-                        data=open(pdf_file, "rb").read(),
-                        file_name="Resume_Analysis_Report.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+                        st.download_button(
+                            label="📥 Download Analysis Report",
+                            data=open(pdf_file, "rb").read(),
+                            file_name="Resume_Analysis_Report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
 
 
                     
-            except Exception as e:
+                except Exception as e:
 
-                st.error(
-                    f"Error: {e}"
-                )
+                    st.error(
+                        f"Error: {e}"
+                    )
+
+st.markdown(
+    """
+    <div id="history-section" style="height:1px;"></div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.title("📜 Resume Analysis History")
+
+history = get_history(st.session_state.username)
+if not history:
+    st.info("No previous analyses found.")
+
+else:
+    for item in history:
+        history_id = item[0]
+        score = item[1]
+        date = item[2]
+        st.write(f"Score: {score}/100")
+        st.write(date)
+
+        # 👇 ADD THE BUTTON HERE
+        if st.button("View Report", key=history_id):
+            report = get_single_history(history_id)
+            st.subheader("Job Description")
+            st.write(report[3])
+
+            st.subheader("AI Analysis")
+            st.write(report[4])
+
+    st.divider()
 
 st.markdown("""
 <div class="footer-divider"></div>
