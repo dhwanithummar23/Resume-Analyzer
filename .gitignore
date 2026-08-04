@@ -77,3 +77,6 @@ reports/
 users.db
 
 .env
+
+main.py
+main2.py

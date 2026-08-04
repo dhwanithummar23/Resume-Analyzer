@@ -89,6 +89,7 @@ div[data-testid="stVerticalBlock"] {
 
 div[data-testid="stVerticalBlockBorderWrapper"] {
   background: var(--surface);
+  color: #fff !important;
   border-radius: var(--radius-md);
   padding: 20px;
   box-shadow: var(--shadow-md);
@@ -167,7 +168,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     var(--primary-light)
   ); */
 
-  background: rgba (61, 213, 109, 0.2);
+  background: rgba(61, 213, 109, 0.2);
 
   /* box-shadow: 0 4px 20px rgba(21, 101, 192, 0.3); */
 
@@ -949,4 +950,19 @@ header[data-testid="stHeader"] {
 div[data-testid="stAppViewContainer"] {
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+/* Login Dialog */
+div[data-testid="stDialog"] > div {
+  background: white !important;
+  color: black !important;
+}
+
+.e1mymz5c3 {
+  color: black !important;
+}
+
+.navbar {
+  position: sticky !important;
+  top: 0 !important;
 }
