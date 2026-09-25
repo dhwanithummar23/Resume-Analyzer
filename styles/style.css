@@ -966,3 +966,21 @@ div[data-testid="stDialog"] > div {
   position: sticky !important;
   top: 0 !important;
 }
+
+p {
+  color: black !important;
+}
+
+.st-emotion-cache-hv6fu1 {
+  background: linear-gradient(135deg, var(--success), #16a34a) !important;
+  /* box-shadow: var(--shadow-primary) !important; */
+}
+
+/* .stBaseButton-secondaryFormSubmit:hover {
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--primary)
+  ) !important;
+  box-shadow: var(--shadow-primary) !important;
+} */

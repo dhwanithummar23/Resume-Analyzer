@@ -126,7 +126,7 @@ https://aistudio.google.com/
 ### 5. Run the Project
 
 ```bash
-streamlit run main2.py
+streamlit run app.py
 ```
 
 ---

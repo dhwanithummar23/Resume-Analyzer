@@ -7,10 +7,12 @@ from dotenv import load_dotenv
 import re
 import pandas as pd
 import json
+from io import BytesIO
+from xml.sax.saxutils import escape
 
 from auth.database import *
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.colors import HexColor
 
@@ -37,6 +39,7 @@ st.set_page_config(
 
 create_users_table()
 create_history_table()
+create_resumes_table()
 
 # -----------------------------------
 # Session State
@@ -272,6 +275,279 @@ def generate_pdf_report(total_score, score_data, analysis_text):
     return "Resume_Analysis_Report.pdf"
 
 
+def generate_ats_resume_pdf(resume):
+    """Generate a simple, text-first PDF that is easy for ATS tools to parse."""
+    buffer = BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        rightMargin=48,
+        leftMargin=48,
+        topMargin=42,
+        bottomMargin=42,
+    )
+    styles = getSampleStyleSheet()
+    name_style = ParagraphStyle(
+        "ResumeName",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=20,
+        leading=24,
+        alignment=TA_CENTER,
+        textColor=HexColor("#1A1A2E"),
+        spaceAfter=4,
+    )
+    headline_style = ParagraphStyle(
+        "ResumeHeadline",
+        parent=styles["BodyText"],
+        alignment=TA_CENTER,
+        fontSize=10,
+        leading=14,
+        textColor=HexColor("#333333"),
+        spaceAfter=3,
+    )
+    contact_style = ParagraphStyle(
+        "ResumeContact",
+        parent=styles["BodyText"],
+        alignment=TA_CENTER,
+        fontSize=9,
+        leading=12,
+        textColor=HexColor("#444444"),
+        spaceAfter=14,
+    )
+    section_style = ParagraphStyle(
+        "ResumeSection",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        leading=14,
+        textColor=HexColor("#1565C0"),
+        spaceBefore=10,
+        spaceAfter=5,
+    )
+    body_style = ParagraphStyle(
+        "ResumeBody",
+        parent=styles["BodyText"],
+        fontSize=10,
+        leading=14,
+        textColor=HexColor("#222222"),
+        spaceAfter=4,
+    )
+
+    def paragraph_text(value):
+        return escape(value.strip()).replace("\n", "<br/>")
+
+    contact = " | ".join(
+        value for value in [
+            resume.get("email", ""),
+            resume.get("phone", ""),
+            resume.get("location", ""),
+            resume.get("linkedin", ""),
+            resume.get("portfolio", ""),
+        ] if value
+    )
+    story = [Paragraph(paragraph_text(resume["full_name"]), name_style)]
+
+    if resume.get("headline"):
+        story.append(Paragraph(paragraph_text(resume["headline"]), headline_style))
+    if contact:
+        story.append(Paragraph(paragraph_text(contact), contact_style))
+    else:
+        story.append(Spacer(1, 8))
+
+    sections = [
+        ("Professional Summary", resume.get("summary", "")),
+        ("Skills", resume.get("skills", "")),
+        ("Work Experience", resume.get("experience", "")),
+        ("Education", resume.get("education", "")),
+        ("Projects", resume.get("projects", "")),
+        ("Certifications", resume.get("certifications", "")),
+    ]
+    for heading, content in sections:
+        if content.strip():
+            story.append(Paragraph(heading, section_style))
+            story.append(Paragraph(paragraph_text(content), body_style))
+
+    document.build(story)
+    return buffer.getvalue()
+
+
+def build_resume_text(resume):
+    """Turn a saved profile into ATS-friendly plain text for analysis."""
+    contact = " | ".join(
+        value for value in [
+            resume.get("email", ""),
+            resume.get("phone", ""),
+            resume.get("location", ""),
+            resume.get("linkedin", ""),
+            resume.get("portfolio", ""),
+        ] if value
+    )
+
+    sections = [
+        resume.get("full_name", ""),
+        resume.get("headline", ""),
+        contact,
+        "PROFESSIONAL SUMMARY\n" + resume.get("summary", ""),
+        "SKILLS\n" + resume.get("skills", ""),
+        "EXPERIENCE\n" + resume.get("experience", ""),
+        "EDUCATION\n" + resume.get("education", ""),
+        "PROJECTS\n" + resume.get("projects", ""),
+        "CERTIFICATIONS\n" + resume.get("certifications", ""),
+    ]
+    return "\n\n".join(section for section in sections if section.strip())
+
+
+def resume_form(existing_resume, form_key):
+    """Render the editable resume profile and return it after a valid save."""
+    resume = existing_resume or {}
+
+    with st.form(form_key):
+        st.subheader("Your resume details")
+        identity_col, contact_col = st.columns(2)
+        with identity_col:
+            full_name = st.text_input("Full name", value=resume.get("full_name", ""))
+            headline = st.text_input(
+                "Professional headline",
+                value=resume.get("headline", ""),
+                placeholder="e.g. Data Analyst | Python | SQL"
+            )
+        with contact_col:
+            email = st.text_input("Email", value=resume.get("email", ""))
+            phone = st.text_input("Phone", value=resume.get("phone", ""))
+
+        location_col, link_col = st.columns(2)
+        with location_col:
+            location = st.text_input("Location", value=resume.get("location", ""))
+            linkedin = st.text_input("LinkedIn URL", value=resume.get("linkedin", ""))
+        with link_col:
+            portfolio = st.text_input(
+                "Portfolio or GitHub URL", value=resume.get("portfolio", "")
+            )
+
+        summary = st.text_area(
+            "Professional summary",
+            value=resume.get("summary", ""),
+            height=120,
+            placeholder="Describe your experience, strengths, and target role."
+        )
+        skills = st.text_area(
+            "Skills",
+            value=resume.get("skills", ""),
+            height=100,
+            placeholder="List skills separated by commas, for example: Python, SQL, Tableau"
+        )
+        experience = st.text_area(
+            "Work experience",
+            value=resume.get("experience", ""),
+            height=180,
+            placeholder="Company | Role | Dates\nDescribe responsibilities and measurable achievements."
+        )
+        education = st.text_area(
+            "Education",
+            value=resume.get("education", ""),
+            height=110,
+            placeholder="Degree | Institution | Graduation year"
+        )
+        projects = st.text_area(
+            "Projects",
+            value=resume.get("projects", ""),
+            height=130,
+            placeholder="Project name | Technologies\nDescribe the outcome or impact."
+        )
+        certifications = st.text_area(
+            "Certifications",
+            value=resume.get("certifications", ""),
+            height=90,
+            placeholder="Optional: certification name, issuer, year"
+        )
+
+        save_column, generate_column = st.columns(2)
+        with save_column:
+            save_submitted = st.form_submit_button(
+                "Save resume", use_container_width=True
+            )
+        with generate_column:
+            generate_submitted = st.form_submit_button(
+                "Generate ATS-friendly resume", use_container_width=True
+            )
+
+    pdf_key = f"{form_key}_pdf"
+    if not save_submitted and not generate_submitted:
+        if st.session_state.get(pdf_key):
+            st.download_button(
+                "Download ATS-friendly resume",
+                data=st.session_state[pdf_key]["data"],
+                file_name=st.session_state[pdf_key]["filename"],
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        return None
+
+    if not full_name.strip() or not email.strip() or not summary.strip() or not skills.strip():
+        st.error("Add your name, email, professional summary, and skills before saving.")
+        return None
+
+    saved_resume = {
+        "full_name": full_name.strip(),
+        "headline": headline.strip(),
+        "email": email.strip(),
+        "phone": phone.strip(),
+        "location": location.strip(),
+        "linkedin": linkedin.strip(),
+        "portfolio": portfolio.strip(),
+        "summary": summary.strip(),
+        "skills": skills.strip(),
+        "experience": experience.strip(),
+        "education": education.strip(),
+        "projects": projects.strip(),
+        "certifications": certifications.strip(),
+    }
+    save_resume(st.session_state.username, saved_resume)
+
+    if generate_submitted:
+        file_stem = re.sub(r"[^A-Za-z0-9]+", "_", full_name.strip()).strip("_")
+        st.session_state[pdf_key] = {
+            "data": generate_ats_resume_pdf(saved_resume),
+            "filename": f"{file_stem or 'resume'}_ATS_Resume.pdf",
+        }
+        st.success("Your ATS-friendly resume is ready to download.")
+        st.download_button(
+            "Download ATS-friendly resume",
+            data=st.session_state[pdf_key]["data"],
+            file_name=st.session_state[pdf_key]["filename"],
+            mime="application/pdf",
+            use_container_width=True,
+        )
+    else:
+        st.session_state.pop(pdf_key, None)
+
+    return saved_resume
+
+
+def render_score_chart(score_data, max_scores):
+    chart_rows = []
+    for category, maximum in max_scores.items():
+        score = min(max(float(score_data.get(category, 0)), 0), maximum)
+        chart_rows.append({
+            "Category": category,
+            "Score": score,
+            "Maximum": maximum,
+            "Percentage": round((score / maximum) * 100),
+        })
+
+    chart_data = pd.DataFrame(chart_rows)
+    st.markdown("### Resume score visual")
+    st.caption("Each category is shown as a percentage of its available marks.")
+    st.bar_chart(
+        chart_data,
+        x="Category",
+        y="Percentage",
+        color="#1565C0",
+        horizontal=True,
+        height=300,
+    )
+
+
 # -----------------------------------
 # Home / Hero Section — PUBLIC, always visible
 # -----------------------------------
@@ -391,11 +667,36 @@ if not st.session_state.logged_in:
         st.rerun()
 
 else:
+    saved_resume = get_resume(st.session_state.username)
+    resume_text = ""
 
-    uploaded_file = st.file_uploader(
-        "Upload Resume (PDF)",
-        type=["pdf"]
-    )
+    if saved_resume:
+        st.success("Your saved resume is ready to analyze.")
+        with st.expander("Update your saved resume"):
+            updated_resume = resume_form(saved_resume, "update_resume_form")
+            if updated_resume:
+                saved_resume = updated_resume
+                st.success("Resume updated.")
+
+        resume_source = st.radio(
+            "Choose a resume source",
+            ["Saved resume", "Upload a PDF"],
+            horizontal=True,
+        )
+        if resume_source == "Saved resume":
+            resume_text = build_resume_text(saved_resume)
+            uploaded_file = None
+        else:
+            uploaded_file = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
+    else:
+        st.info("You do not have a saved resume yet. Create one below or upload a PDF.")
+        created_resume = resume_form(None, "create_resume_form")
+        if created_resume:
+            saved_resume = created_resume
+            resume_text = build_resume_text(saved_resume)
+            st.success("Resume created. You can analyze it now.")
+
+        uploaded_file = st.file_uploader("Or upload a Resume (PDF)", type=["pdf"])
 
     st.markdown("### 💼 Job Description")
 
@@ -423,11 +724,13 @@ else:
                 text += page_text + "\n"
 
         # Clean extracted text
-        text_clean = re.sub(
+        resume_text = re.sub(
             r"(?<!\n)\n(?!\n)",
             " ",
             text
         )
+
+    if resume_text:
 
         st.markdown(
             "<div class='card-title'>📄 Resume Preview</div>",
@@ -435,8 +738,8 @@ else:
         )
 
         st.text_area(
-            "Analysis Report",
-            value=text_clean,
+            "Resume content",
+            value=resume_text,
             height=500
         )
 
@@ -448,7 +751,7 @@ else:
         analyze = st.button(
             "🚀 Analyze Resume",
             use_container_width=True,
-            disabled=not (uploaded_file and job_description.strip())
+            disabled=not (resume_text and job_description.strip())
         )
 
         if analyze:
@@ -512,7 +815,7 @@ else:
 
         Resume:
 
-        {text_clean}
+        {resume_text}
         """
                 try:
 
@@ -556,6 +859,19 @@ else:
                             "Clarity & Formatting": 20,
                             "Overall Impression": 20
                         }
+
+                        normalized_scores = {}
+                        for category, maximum in max_scores.items():
+                            try:
+                                normalized_scores[category] = min(
+                                    max(float(score_data.get(category, 0)), 0),
+                                    maximum,
+                                )
+                            except (TypeError, ValueError):
+                                normalized_scores[category] = 0
+                        score_data = normalized_scores
+
+                        render_score_chart(score_data, max_scores)
 
                         for category, score in score_data.items():
 
